@@ -23,7 +23,7 @@ env:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest-arm64
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:17
@@ -73,7 +73,7 @@ jobs:
 
   fmt:
     name: Format
-    runs-on: ubuntu-latest-arm64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install the Rust toolchain
@@ -86,7 +86,7 @@ jobs:
 
   clippy:
     name: Clippy
-    runs-on: ubuntu-latest-arm64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install the Rust toolchain
