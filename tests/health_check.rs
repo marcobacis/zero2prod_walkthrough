@@ -1,6 +1,6 @@
 use std::{net::TcpListener, sync::LazyLock};
 
-use secrecy::{ExposeSecret, Secret};
+use secrecy::Secret;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use tokio::test;
 use uuid::Uuid;
@@ -41,7 +41,9 @@ async fn spawn_app() -> TestApp {
 
     let pool = configure_database(&configuration.database).await;
 
-    let server = run(listener, pool.clone()).expect("Failed to bind address");
+    let server = run(listener, pool.clone())
+        .await
+        .expect("Failed to bind address");
     let _ = tokio::spawn(server);
 
     TestApp {
@@ -58,10 +60,9 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         ..config.clone()
     };
 
-    let mut connection =
-        PgConnection::connect(&maintenance_settings.connection_string().expose_secret())
-            .await
-            .expect("Failed to connect to Postgres");
+    let mut connection = PgConnection::connect_with(&maintenance_settings.connect_options())
+        .await
+        .expect("Failed to connect to Postgres");
 
     connection
         .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
@@ -69,13 +70,9 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("Failed to create database.");
 
     // Migrate
-    let connection_pool = PgPool::connect(&config.connection_string().expose_secret())
+    let connection_pool = PgPool::connect_with(config.connect_options())
         .await
         .expect("Failed to connect to Postgres.");
-    sqlx::migrate!("./migrations")
-        .run(&connection_pool)
-        .await
-        .expect("Failed to migrate the database");
 
     connection_pool
 }

@@ -6,9 +6,15 @@ use tracing_actix_web::TracingLogger;
 
 use crate::routes::{health_check, subscribe};
 
-pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Error> {
-    let pool = web::Data::new(db_pool);
+pub async fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Error> {
+    // Migrate db
+    sqlx::migrate!("./migrations")
+        .run(&db_pool)
+        .await
+        .expect("Failed to migrate the database");
 
+    // Start web server
+    let pool = web::Data::new(db_pool);
     let server = HttpServer::new(move || {
         App::new()
             .wrap(TracingLogger::default())
