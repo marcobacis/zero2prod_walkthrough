@@ -6,4 +6,3 @@ Dockerfile
 .env
 tests/
 scripts/
-migrations/
