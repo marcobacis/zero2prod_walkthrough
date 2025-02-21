@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: zero2prod-api-svc
+spec:
+  ports:
+  - port: 80
+    name: web
+  selector:
+    app: zero2prod
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zero2prod-api
+spec:
+  selector:
+    matchLabels:
+      app: zero2prod
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: zero2prod
+    spec:
+      containers:
+      - name: zero2prod
+        image: ghcr.io/marcobacis/zero2prod:develop
+        ports:
+        - containerPort: 80
+          name: 
+        env:
+        - name: APP_APPLICATION__PORT
+          value: "80"
+        - name: APP_APPLICATION_HOST
+          value: "0.0.0.0"
+        - name: APP_DATABASE__HOST
+          value: "zero2prod-db-svc.default.svc.cluster.local"
+        - name: APP_DATABASE__USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: zero2prod-config
+              key: pg-username
+        - name: APP_DATABASE__PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: zero2prod-config
+              key: pg-password
+        - name: APP_DATABASE__DATABASE_NAME
+          value: "newsletter"

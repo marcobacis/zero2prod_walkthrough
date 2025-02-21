@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: zero2prod-db-svc
+spec:
+  ports:
+  - port: 5432
+    name: postgres
+  selector:
+    app: zero2prod
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zero2prod-db
+spec:
+  selector:
+    matchLabels:
+      app: zero2prod
+  serviceName: zero2prod-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: zero2prod
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: postgres
+        image: registry.hub.docker.com/library/postgres:17.3
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - name: zero2prod-pgdata
+          mountPath: /var/lib/postgresql/data
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: zero2prod-config
+              key: pg-username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: zero2prod-config
+              key: pg-password
+        - name: POSTGRES_DB
+          value: newsletter
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+  volumeClaimTemplates:
+  - metadata:
+      name: zero2prod-pgdata
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "proxmox"
+      resources:
+        requests:
+          storage: 1Gi
