@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: zero2prod-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: zerotoprod.labs.marcobacis.com
+      http:
+        paths:
+          - pathType: Prefix
+            backend:
+              service:
+                name: zero2prod-api-svc
+                port:
+                  number: 80
+            path: /
