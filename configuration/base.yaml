@@ -7,3 +7,8 @@ database:
   password: "password"
   database_name: "newsletter"
   require_ssl: false
+email_client:
+  base_url: "localhost"
+  sender_email: "test@gmail.com"
+  token: "my_token"
+  timeout_ms: 10000

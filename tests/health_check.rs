@@ -5,9 +5,7 @@ use sqlx::{Connection, Executor, PgConnection, PgPool};
 use tokio::test;
 use uuid::Uuid;
 use zero2prod::{
-    configuration::{get_configuration, DatabaseSettings},
-    startup::run,
-    telemetry::{get_subscriber, init_subscriber},
+    configuration::{get_configuration, DatabaseSettings}, email_client::EmailClient, startup::run, telemetry::{get_subscriber, init_subscriber}
 };
 
 // Ensure that the `tracing` stack is only initialised once using `LazyLock`
@@ -41,7 +39,21 @@ async fn spawn_app() -> TestApp {
 
     let pool = configure_database(&configuration.database).await;
 
-    let server = run(listener, pool.clone())
+    // Build a new email client
+    let sender_email = configuration
+        .email_client
+        .sender()
+        .expect("Invalid sender email address.");
+
+        let timeout = configuration.email_client.timeout();
+    let email_client = EmailClient::new(
+        configuration.email_client.base_url, 
+        sender_email, 
+        configuration.email_client.token,
+        timeout
+    );
+
+    let server = run(listener, pool.clone(), email_client)
         .await
         .expect("Failed to bind address");
     let _ = tokio::spawn(server);

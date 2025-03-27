@@ -8,7 +8,8 @@ if ! [ -x "$(command -v sqlx)" ]; then
     echo >&2 "Error: sqlx is not installed."
     echo >&2 "Use:"
     echo >&2 " cargo install --version='~0.8' sqlx-cli \
-        --no-default-features --features rustls,postgres" echo "to install it." >&2
+        --no-default-features --features rustls,postgres"
+    echo "to install it." >&2
     exit 1
 fi
 
@@ -25,16 +26,16 @@ APP_DB_NAME="${APP_DB_NAME:=newsletter}"
 CONTAINER_NAME="postgres"
 
 if [[ -z "${SKIP_DOCKER}" ]]; then
-    docker run \
-        --env POSTGRES_USER=${SUPERUSER} \
-        --env POSTGRES_PASSWORD=${SUPERUSER_PWD} \
-        --health-cmd="pg_isready -U ${SUPERUSER} || exit 1" --health-interval=1s \
-        --health-timeout=5s \
-        --health-retries=5 \
-        --publish "${DB_PORT}":5432 \
-        --detach \
-        --name "${CONTAINER_NAME}" \
-        postgres -N 1000
+    # docker run \
+    #     --env POSTGRES_USER=${SUPERUSER} \
+    #     --env POSTGRES_PASSWORD=${SUPERUSER_PWD} \
+    #     --health-cmd="pg_isready -U ${SUPERUSER} || exit 1" --health-interval=1s \
+    #     --health-timeout=5s \
+    #     --health-retries=5 \
+    #     --publish "${DB_PORT}":5432 \
+    #     --detach \
+    #     --name "${CONTAINER_NAME}" \
+    #     postgres -N 1000
 
     # Wait for Postgres to be ready to accept connections
     until [ "$(docker inspect -f "{{.State.Health.Status}}" ${CONTAINER_NAME})" == "healthy" ]; do
