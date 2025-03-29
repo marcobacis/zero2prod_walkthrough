@@ -13,7 +13,12 @@ pub struct EmailClient {
 }
 
 impl EmailClient {
-    pub fn new(base_url: String, sender: SubscriberEmail, token: Secret<String>, timeout: Duration) -> Self {
+    pub fn new(
+        base_url: String,
+        sender: SubscriberEmail,
+        token: Secret<String>,
+        timeout: Duration,
+    ) -> Self {
         let http_client = Client::builder().timeout(timeout).build().unwrap();
         Self {
             base_url,
@@ -37,7 +42,7 @@ impl EmailClient {
         let request = SendEmailRequest {
             from: self.sender.as_ref(),
             to: recipient.as_ref(),
-            subject: subject,
+            subject,
             html_body: html_content,
             text_body: text_content,
         };
@@ -67,16 +72,6 @@ struct SendEmailRequest<'a> {
     text_body: &'a str,
 }
 
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "PascalCase")]
-struct SendEmailResponse {
-    to: String,
-    submittedAt: String,
-    messageId: String,
-    errorCode: i8,
-    message: String,
-}
-
 #[cfg(test)]
 mod tests {
 
@@ -84,7 +79,10 @@ mod tests {
 
     use claims::{assert_err, assert_ok};
     use secrecy::Secret;
-    use wiremock::{matchers::{any, header, header_exists, method, path}, Mock, MockServer, ResponseTemplate};
+    use wiremock::{
+        matchers::{any, header, header_exists, method, path},
+        Mock, MockServer, ResponseTemplate,
+    };
 
     use crate::domain::SubscriberEmail;
     use fake::faker::internet::en::SafeEmail;
@@ -93,13 +91,12 @@ mod tests {
 
     use super::EmailClient;
 
-
     fn email() -> SubscriberEmail {
         SubscriberEmail::parse(&SafeEmail().fake::<String>()).unwrap()
     }
 
     fn subject() -> String {
-        Sentence(1..2).fake()   
+        Sentence(1..2).fake()
     }
 
     fn content() -> String {
@@ -107,7 +104,12 @@ mod tests {
     }
 
     fn email_client(base_url: String) -> EmailClient {
-        EmailClient::new(base_url, email(), Secret::new(Faker.fake()), Duration::from_millis(200))
+        EmailClient::new(
+            base_url,
+            email(),
+            Secret::new(Faker.fake()),
+            Duration::from_millis(200),
+        )
     }
 
     #[tokio::test]
@@ -144,7 +146,6 @@ mod tests {
             .expect(1)
             .mount(&mock_server)
             .await;
-
 
         let outcome = email_client
             .send_email(email(), &subject(), &content(), &content())
