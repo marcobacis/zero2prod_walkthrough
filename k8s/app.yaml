@@ -36,6 +36,8 @@ spec:
           value: "80"
         - name: APP_APPLICATION_HOST
           value: "0.0.0.0"
+        - name: APP_APPLICATION_BASE_URL
+          value: "http://zerotoprod.labs.marcobacis.com"
         - name: APP_DATABASE__HOST
           value: "zero2prod-db-svc.default.svc.cluster.local"
         - name: APP_DATABASE__USERNAME
