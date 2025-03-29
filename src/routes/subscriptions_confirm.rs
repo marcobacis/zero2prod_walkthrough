@@ -2,15 +2,13 @@ use actix_web::{web, HttpResponse};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-
 #[derive(serde::Deserialize)]
 pub struct Parameters {
-    pub token: String
+    pub token: String,
 }
 
 #[tracing::instrument(name = "Confirming a pending subscriber", skip(_parameters))]
 pub async fn confirm(_parameters: web::Query<Parameters>, pool: web::Data<PgPool>) -> HttpResponse {
-
     let subscriber_id = match get_subscriber_id_from_token(&pool, &_parameters.token).await {
         Ok(id) => id,
         Err(_) => return HttpResponse::InternalServerError().finish(),
@@ -19,7 +17,7 @@ pub async fn confirm(_parameters: web::Query<Parameters>, pool: web::Data<PgPool
     match subscriber_id {
         None => HttpResponse::NotFound().finish(),
         Some(id) => {
-            if(confirm_subscriber(&pool, id)).await.is_err() {
+            if (confirm_subscriber(&pool, id)).await.is_err() {
                 return HttpResponse::InternalServerError().finish();
             }
             HttpResponse::Ok().finish()
@@ -28,11 +26,17 @@ pub async fn confirm(_parameters: web::Query<Parameters>, pool: web::Data<PgPool
 }
 
 #[tracing::instrument(name = "Finding subscriber using token", skip(pool, token))]
-async fn get_subscriber_id_from_token(pool: &PgPool, token: &str) -> Result<Option<Uuid>, sqlx::Error> {
+async fn get_subscriber_id_from_token(
+    pool: &PgPool,
+    token: &str,
+) -> Result<Option<Uuid>, sqlx::Error> {
     let result = sqlx::query!(
         "SELECT subscriber_id FROM subscription_tokens WHERE subscription_token = $1",
         token
-    ).fetch_optional(pool).await.map_err(|e| {
+    )
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| {
         tracing::error!("Failed to execute query: {:?}", e);
         e
     })?;
@@ -48,7 +52,7 @@ async fn confirm_subscriber(pool: &PgPool, subscriber_id: Uuid) -> Result<(), sq
     .execute(pool)
     .await
     .map_err(|e| {
-        tracing::error!("Failed to execute query: {}",e);
+        tracing::error!("Failed to execute query: {}", e);
         e
     })?;
     Ok(())

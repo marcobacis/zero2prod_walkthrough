@@ -33,12 +33,17 @@ impl Application {
 
         let address = format!(
             "{}:{}",
-            configuration.application.host, 
-            configuration.application.port
+            configuration.application.host, configuration.application.port
         );
         let listener = TcpListener::bind(address)?;
         let port = listener.local_addr().unwrap().port();
-        let server = run(listener, connection_pool, email_client, configuration.application.base_url).await?;
+        let server = run(
+            listener,
+            connection_pool,
+            email_client,
+            configuration.application.base_url,
+        )
+        .await?;
 
         Ok(Self { port, server })
     }
@@ -69,7 +74,7 @@ async fn run(
     // Start web server
     let pool = web::Data::new(db_pool);
     let email_client = web::Data::new(email_client);
-    let base_url= web::Data::new(ApplicationBaseUrl(base_url));
+    let base_url = web::Data::new(ApplicationBaseUrl(base_url));
     let server = HttpServer::new(move || {
         App::new()
             .wrap(TracingLogger::default())
