@@ -1,9 +1,7 @@
-use reqwest::Url;
 use wiremock::{
     matchers::{method, path},
-    Mock, Respond, ResponseTemplate,
+    Mock, ResponseTemplate,
 };
-use zero2prod::email_client;
 
 use crate::helpers::spawn_app;
 
