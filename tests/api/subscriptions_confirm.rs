@@ -49,7 +49,7 @@ async fn clicking_confirmation_link_confirms_a_subscriber() {
 
     app.post_subscriptions(body).await;
     let email_request = &app.email_server.received_requests().await.unwrap()[0];
-    let confirmation_links = app.get_confirmation_links(&email_request);
+    let confirmation_links = app.get_confirmation_links(email_request);
 
     reqwest::get(confirmation_links.html)
         .await

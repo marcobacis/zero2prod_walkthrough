@@ -38,7 +38,7 @@ pub struct TestApp {
 impl TestApp {
     pub async fn post_subscriptions<T: Into<String>>(&self, body: T) -> reqwest::Response {
         reqwest::Client::new()
-            .post(&format!("{}/subscriptions", &self.address))
+            .post(format!("{}/subscriptions", &self.address))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(body.into())
             .send()
@@ -60,8 +60,8 @@ impl TestApp {
             confirmation_link.set_port(Some(self.port)).unwrap();
             confirmation_link
         };
-        let html = get_link(&body["HtmlBody"].as_str().unwrap());
-        let plain_text = get_link(&body["HtmlBody"].as_str().unwrap());
+        let html = get_link(body["HtmlBody"].as_str().unwrap());
+        let plain_text = get_link(body["HtmlBody"].as_str().unwrap());
 
         ConfirmationLinks { html, plain_text }
     }
@@ -87,7 +87,7 @@ pub async fn spawn_app() -> TestApp {
         .expect("Failed to build application");
     let application_port = application.port();
     let address = format!("http://127.0.0.1:{}", application.port());
-    let _ = tokio::spawn(application.run_until_stopped());
+    tokio::spawn(application.run_until_stopped());
 
     TestApp {
         address,
@@ -115,9 +115,7 @@ async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("Failed to create database.");
 
     // Migrate
-    let connection_pool = PgPool::connect_with(config.connect_options())
+    PgPool::connect_with(config.connect_options())
         .await
-        .expect("Failed to connect to Postgres.");
-
-    connection_pool
+        .expect("Failed to connect to Postgres.")
 }

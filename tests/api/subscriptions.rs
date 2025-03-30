@@ -35,7 +35,7 @@ async fn subscribe_persist_new_subscriber() {
 
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
 
-    let response = app.post_subscriptions(body).await;
+    app.post_subscriptions(body).await;
 
     // Assert
     let subscribed = sqlx::query!("SELECT email, name, status FROM subscriptions",)
