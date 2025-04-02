@@ -1,4 +1,5 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpResponse, ResponseError};
+use anyhow::Context;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -7,22 +8,35 @@ pub struct Parameters {
     pub token: String,
 }
 
-#[tracing::instrument(name = "Confirming a pending subscriber", skip(_parameters))]
-pub async fn confirm(_parameters: web::Query<Parameters>, pool: web::Data<PgPool>) -> HttpResponse {
-    let subscriber_id = match get_subscriber_id_from_token(&pool, &_parameters.token).await {
-        Ok(id) => id,
-        Err(_) => return HttpResponse::InternalServerError().finish(),
-    };
+#[derive(thiserror::Error, Debug)]
+pub enum ConfirmationError {
+    #[error(transparent)]
+    UnexpectedError(#[from] anyhow::Error),
+    #[error("No subscriber associated with the given token.")]
+    TokenNotFound,
+}
 
-    match subscriber_id {
-        None => HttpResponse::NotFound().finish(),
-        Some(id) => {
-            if (confirm_subscriber(&pool, id)).await.is_err() {
-                return HttpResponse::InternalServerError().finish();
-            }
-            HttpResponse::Ok().finish()
+impl ResponseError for ConfirmationError {
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        match self {
+            ConfirmationError::UnexpectedError(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            ConfirmationError::TokenNotFound => actix_web::http::StatusCode::NOT_FOUND,
         }
     }
+}
+
+#[tracing::instrument(name = "Confirming a pending subscriber", skip(_parameters))]
+pub async fn confirm(_parameters: web::Query<Parameters>, pool: web::Data<PgPool>) -> Result<HttpResponse, ConfirmationError> {
+    let subscriber_id = get_subscriber_id_from_token(&pool, &_parameters.token)
+        .await
+        .context("Failed to retrieve the subscriber associated with the given token")?
+        .ok_or(ConfirmationError::TokenNotFound)?;
+
+    confirm_subscriber(&pool, subscriber_id)
+        .await
+        .context("Failed to update the subscriber status to 'confirmed'")?;
+
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[tracing::instrument(name = "Finding subscriber using token", skip(pool, token))]
