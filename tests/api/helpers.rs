@@ -2,6 +2,7 @@ use std::sync::LazyLock;
 
 use reqwest::Url;
 use secrecy::Secret;
+use serde_json::Value;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use wiremock::MockServer;
@@ -64,6 +65,15 @@ impl TestApp {
         let plain_text = get_link(body["HtmlBody"].as_str().unwrap());
 
         ConfirmationLinks { html, plain_text }
+    }
+
+    pub async fn post_newsletters(&self, body: &Value) -> reqwest::Response {
+        reqwest::Client::new()
+            .post(&format!("{}/newsletters", &self.address))
+            .json(&body)
+            .send()
+            .await
+            .expect("failed to execute POST /newsletters")
     }
 }
 
