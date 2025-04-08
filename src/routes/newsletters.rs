@@ -8,6 +8,7 @@ use actix_web::{
 use anyhow::Context;
 use base64::Engine;
 use secrecy::{ExposeSecret, Secret};
+use sha3::Digest;
 use sqlx::PgPool;
 
 use crate::{domain::SubscriberEmail, email_client::EmailClient};
@@ -74,7 +75,7 @@ pub async fn publish_newsletter(
     tracing::Span::current().record("username", &credentials.username);
 
     let user_id = validate_credentials(credentials, &pool).await?;
-    tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
+    tracing::Span::current().record("user_id", tracing::field::display(&user_id));
 
     let subscribers = get_confirmed_subscribers(&pool).await?;
 
@@ -149,14 +150,19 @@ async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
 ) -> Result<uuid::Uuid, PublishError> {
+    let password_hash = sha3::Sha3_256::digest(
+        credentials.password.expose_secret().as_bytes()
+    );
+    let password_hash = format!("{:x}", password_hash);
+
     let user_id = sqlx::query!(
         r#"
         SELECT user_id
         FROM users
-        WHERE username = $1 AND password = $2
+        WHERE username = $1 AND password_hash = $2
         "#,
         credentials.username,
-        credentials.password.expose_secret()
+        password_hash
     )
     .fetch_optional(pool)
     .await

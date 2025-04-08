@@ -22,6 +22,7 @@ validator = "0.18"
 thiserror= "1"
 anyhow= "1"
 base64 = "0.22"
+sha3 = "0.9"
 
 # Using table-like toml syntax to avoid a super-long line!
 [dependencies.sqlx]
