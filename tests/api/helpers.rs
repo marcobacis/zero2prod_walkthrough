@@ -35,7 +35,7 @@ pub struct TestApp {
     pub port: u16,
     pub db_pool: PgPool,
     pub email_server: MockServer,
-    test_user: TestUser,
+    pub test_user: TestUser,
 }
 
 impl TestApp {
@@ -138,7 +138,7 @@ async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("Failed to connect to Postgres.")
 }
 
-struct TestUser {
+pub struct TestUser {
     pub user_id: Uuid,
     pub username: String,
     pub password: String,
