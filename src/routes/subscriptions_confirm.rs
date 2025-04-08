@@ -19,14 +19,19 @@ pub enum ConfirmationError {
 impl ResponseError for ConfirmationError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match self {
-            ConfirmationError::UnexpectedError(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            ConfirmationError::UnexpectedError(_) => {
+                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR
+            }
             ConfirmationError::TokenNotFound => actix_web::http::StatusCode::NOT_FOUND,
         }
     }
 }
 
 #[tracing::instrument(name = "Confirming a pending subscriber", skip(_parameters))]
-pub async fn confirm(_parameters: web::Query<Parameters>, pool: web::Data<PgPool>) -> Result<HttpResponse, ConfirmationError> {
+pub async fn confirm(
+    _parameters: web::Query<Parameters>,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, ConfirmationError> {
     let subscriber_id = get_subscriber_id_from_token(&pool, &_parameters.token)
         .await
         .context("Failed to retrieve the subscriber associated with the given token")?
