@@ -104,8 +104,11 @@ async fn non_existing_user_is_rejected() {
         .await
         .expect("Failed to execute request");
 
-    assert_eq!(401,response.status().as_u16());
-    assert_eq!(r#"Basic realm="publish""#, response.headers()["WWW-Authenticate"]);
+    assert_eq!(401, response.status().as_u16());
+    assert_eq!(
+        r#"Basic realm="publish""#,
+        response.headers()["WWW-Authenticate"]
+    );
 }
 
 #[test]
@@ -123,8 +126,11 @@ async fn invalid_password_is_rejected() {
         .await
         .expect("Failed to execute request");
 
-    assert_eq!(401,response.status().as_u16());
-    assert_eq!(r#"Basic realm="publish""#, response.headers()["WWW-Authenticate"]);
+    assert_eq!(401, response.status().as_u16());
+    assert_eq!(
+        r#"Basic realm="publish""#,
+        response.headers()["WWW-Authenticate"]
+    );
 }
 
 fn dummy_newsletter_body() -> serde_json::Value {
