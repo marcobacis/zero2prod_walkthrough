@@ -52,3 +52,5 @@ spec:
               key: pg-password
         - name: APP_DATABASE__DATABASE_NAME
           value: "newsletter"
+        - name: APP_REDIS_URI
+          value: "redis://redis:6379"
