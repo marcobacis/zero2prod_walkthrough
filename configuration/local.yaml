@@ -1,4 +1,4 @@
 application:
   host: "127.0.0.1"
   base_url: "http://127.0.0.1"
-  hmac_secret: "very-long-random-key"
+  hmac_secret: "2tyQMisHjKjQSLllS1mOZVQfnRB10FU1Xgq1JyogP9vjPvDl7CFlCstTx7gXGj8K"
