@@ -3,7 +3,6 @@ use std::sync::LazyLock;
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use reqwest::{header::LOCATION, redirect, Response, Url};
 use secrecy::Secret;
-use serde_json::Value;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use wiremock::MockServer;
@@ -70,11 +69,19 @@ impl TestApp {
         ConfirmationLinks { html, plain_text }
     }
 
-    pub async fn post_newsletters(&self, body: &Value) -> reqwest::Response {
+    pub async fn get_newsletter_form(&self) -> Response {
+        self.get("/admin/newsletters").await
+    }
+
+    pub async fn get_newsletter_form_html(&self) -> String {
+        self.get_html("/admin/newsletters").await
+    }
+
+    pub async fn post_newsletter<Body>(&self, body: &Body) -> reqwest::Response
+    where Body : serde::Serialize {
         self.api_client
-            .post(format!("{}/newsletters", &self.address))
-            .basic_auth(&self.test_user.username, Some(&self.test_user.password))
-            .json(&body)
+            .post(format!("{}/admin/newsletters", &self.address))
+            .form(body)
             .send()
             .await
             .expect("failed to execute POST /newsletters")
