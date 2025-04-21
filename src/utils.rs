@@ -19,7 +19,7 @@ pub fn see_other(location: &str) -> HttpResponse {
 pub fn redirect_with_error<E: ToString>(to: &str, e: E) -> InternalError<E> {
     FlashMessage::error(e.to_string()).send();
     let response: HttpResponse = HttpResponse::SeeOther()
-        .insert_header((LOCATION, format!("{to}")))
+        .insert_header((LOCATION, to.to_string()))
         .finish();
 
     InternalError::from_response(e, response)
