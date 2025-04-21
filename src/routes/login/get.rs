@@ -1,11 +1,10 @@
 use actix_web::{http::header::ContentType, HttpResponse};
-use actix_web_flash_messages::{IncomingFlashMessages, Level};
+use actix_web_flash_messages::IncomingFlashMessages;
 
 pub async fn login_form(flash_messages: IncomingFlashMessages) -> HttpResponse {
     let messages_html: String = flash_messages
         .iter()
-        .filter(|e| e.level() == Level::Error)
-        .map(|m| format!("<p>{}</p>", m.content()))
+        .map(|m| format!("<p><i>{}</i></p>", m.content()))
         .collect();
 
     HttpResponse::Ok()

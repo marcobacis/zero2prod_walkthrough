@@ -92,6 +92,22 @@ impl TestApp {
             .expect("Failed to execute login request.")
     }
 
+    pub async fn logout(&self) -> Response {
+        self.api_client
+            .post(format!("{}/admin/logout", self.address))
+            .send()
+            .await
+            .expect("Failed to send logout request")
+    }
+
+    pub async fn login_with_test_user(&self) {
+        self.post_login(&serde_json::json!({
+            "username": &self.test_user.username,
+            "password": &self.test_user.password,
+        }))
+        .await;
+    }
+
     pub async fn get_login(&self) -> String {
         self.get_html("/login").await
     }
@@ -102,6 +118,25 @@ impl TestApp {
 
     pub async fn get_admin_dashboard_html(&self) -> String {
         self.get_html("/admin/dashboard").await
+    }
+
+    pub async fn get_change_password(&self) -> Response {
+        self.get("/admin/password").await
+    }
+    pub async fn get_change_password_html(&self) -> String {
+        self.get_html("/admin/password").await
+    }
+
+    pub async fn post_change_password<Body>(&self, body: &Body) -> Response
+    where
+        Body: serde::Serialize,
+    {
+        self.api_client
+            .post(format!("{}/admin/password", &self.address))
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to execute request")
     }
 
     async fn get(&self, url: &str) -> Response {

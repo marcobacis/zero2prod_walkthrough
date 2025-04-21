@@ -3,11 +3,14 @@ use actix_web::{
     http::{header::LOCATION, StatusCode},
     web, HttpResponse, ResponseError,
 };
-use actix_web_flash_messages::FlashMessage;
 use secrecy::Secret;
 use sqlx::PgPool;
 
-use crate::{authentication::{validate_credentials, AuthError, Credentials}, session_state::TypedSession};
+use crate::{
+    authentication::{validate_credentials, AuthError, Credentials},
+    session_state::TypedSession,
+    utils::redirect_with_error,
+};
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -64,13 +67,4 @@ pub async fn login(
     Ok(HttpResponse::SeeOther()
         .insert_header((LOCATION, "/admin/dashboard"))
         .finish())
-}
-
-fn redirect_with_error<E: ToString>(to: &str, e: E) -> InternalError<E> {
-    FlashMessage::error(e.to_string()).send();
-    let response: HttpResponse = HttpResponse::SeeOther()
-        .insert_header((LOCATION, format!("{to}")))
-        .finish();
-
-    InternalError::from_response(e, response)
 }
