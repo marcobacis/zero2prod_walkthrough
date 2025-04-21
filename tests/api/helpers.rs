@@ -1,7 +1,7 @@
 use std::sync::LazyLock;
 
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
-use reqwest::{header::LOCATION, redirect, Url};
+use reqwest::{header::LOCATION, redirect, Response, Url};
 use secrecy::Secret;
 use serde_json::Value;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
@@ -93,8 +93,28 @@ impl TestApp {
     }
 
     pub async fn get_login(&self) -> String {
+        self.get_html("/login").await
+    }
+
+    pub async fn get_admin_dashboard(&self) -> Response {
+        self.get("/admin/dashboard").await
+    }
+
+    pub async fn get_admin_dashboard_html(&self) -> String {
+        self.get_html("/admin/dashboard").await
+    }
+
+    async fn get(&self, url: &str) -> Response {
         self.api_client
-            .get(format!("{}/login", self.address))
+            .get(format!("{}{}", self.address, url))
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
+    async fn get_html(&self, url: &str) -> String {
+        self.api_client
+            .get(format!("{}{}", self.address, url))
             .send()
             .await
             .expect("Failed to execute request")

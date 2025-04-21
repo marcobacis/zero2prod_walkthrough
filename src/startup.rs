@@ -10,7 +10,7 @@ use tracing_actix_web::TracingLogger;
 use crate::{
     configuration::{DatabaseSettings, Settings},
     email_client::EmailClient,
-    routes::{confirm, health_check, home, login, login_form, publish_newsletter, subscribe},
+    routes::{admin_dashboard, confirm, health_check, home, login, login_form, publish_newsletter, subscribe},
 };
 
 pub struct Application {
@@ -96,6 +96,7 @@ async fn run(
             .wrap(SessionMiddleware::new(redis_store.clone(), secret_key.clone()))
             .wrap(TracingLogger::default())
             .route("/", web::get().to(home))
+            .route("/admin/dashboard", web::get().to(admin_dashboard))
             .route("/login", web::get().to(login_form))
             .route("/login", web::post().to(login))
             .route("/health_check", web::get().to(health_check))
