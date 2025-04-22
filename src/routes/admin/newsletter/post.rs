@@ -1,13 +1,12 @@
-use actix_web::{
-    web, HttpResponse,
-};
+use actix_web::{web, HttpResponse};
 use actix_web_flash_messages::FlashMessage;
 use anyhow::Context;
 use sqlx::PgPool;
 
 use crate::{
     domain::SubscriberEmail,
-    email_client::EmailClient, utils::{e500, redirect_with_error, see_other},
+    email_client::EmailClient,
+    utils::{e500, redirect_with_error, see_other},
 };
 
 #[derive(serde::Deserialize)]
@@ -46,8 +45,8 @@ pub async fn publish_newsletter(
                     .await
                     .with_context(|| {
                         format!("Failed to send newsletter issue to {}", subscriber.email)
-                    }).map_err(|e| redirect_with_error("/admin/newsletters", e))?;
-
+                    })
+                    .map_err(|e| redirect_with_error("/admin/newsletters", e))?;
             }
             Err(error) => {
                 tracing::warn!(
