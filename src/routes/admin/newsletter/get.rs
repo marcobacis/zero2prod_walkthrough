@@ -10,7 +10,10 @@ pub async fn newsletter_form(
         writeln!(error_msg, "<p><i>{}</i></p>", m.content()).unwrap();
     }
 
-    let body = include_str!("./newsletter_form.html").replace("{messages}", &error_msg);
+    let idempotency_key = uuid::Uuid::new_v4().to_string();
+    let body = include_str!("./newsletter_form.html")
+        .replace("{messages}", &error_msg)
+        .replace("{idempotency_key}", &idempotency_key);
 
     Ok(HttpResponse::Ok()
         .content_type(ContentType::html())

@@ -60,11 +60,40 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     assert!(html.contains("The newsletter issue has been published!"));
 }
 
+#[test]
+async fn newsletter_delivery_is_idempotent() {
+    let app = spawn_app().await;
+    app.login_with_test_user().await;
+    create_confirmed_subscriber(&app).await;
+
+    // We expect 1 mail to be sent even with 2 requests
+    Mock::given(any())
+        .respond_with(ResponseTemplate::new(200))
+        .expect(1)
+        .mount(&app.email_server)
+        .await;
+
+    let body = dummy_newsletter_body();
+
+    // Request #1
+    let response = app.post_newsletter(&body).await;
+    assert_is_redirect_to(&response, "/admin/newsletters");
+    let html_page = app.get_newsletter_form_html().await;
+    assert!(html_page.contains("The newsletter issue has been published"));
+
+    // Request #2 with same body (even idempotency key)
+    let response = app.post_newsletter(&body).await;
+    assert_is_redirect_to(&response, "/admin/newsletters");
+    let html_page = app.get_newsletter_form_html().await;
+    assert!(html_page.contains("The newsletter issue has been published"));
+}
+
 fn dummy_newsletter_body() -> serde_json::Value {
     serde_json::json!({
         "title": "Newsletter title",
         "text_content": "Newsletter body as plain text",
         "html_content": "<p>Newsletter body as HTML</p>",
+        "idempotency_key": uuid::Uuid::new_v4().to_string()
     })
 }
 
