@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+use fake::faker::name::en::Name;
+use fake::{faker::internet::en::SafeEmail, Fake};
 use tokio::test;
 use wiremock::{
     matchers::{any, method, path},
@@ -39,7 +41,9 @@ async fn newsletter_is_not_delivered_to_unconfirmed_subscribers() {
     assert_is_redirect_to(&response, "/admin/newsletters");
 
     let html = app.get_newsletter_form_html().await;
-    assert!(html.contains("The newsletter issue has been published!"));
+    assert!(html.contains("The newsletter issue has been accepted"));
+
+    app.dispatch_pending_emails().await;
 }
 
 #[test]
@@ -59,7 +63,9 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     assert_is_redirect_to(&response, "/admin/newsletters");
 
     let html = app.get_newsletter_form_html().await;
-    assert!(html.contains("The newsletter issue has been published!"));
+    assert!(html.contains("The newsletter issue has been accepted"));
+
+    app.dispatch_pending_emails().await;
 }
 
 #[test]
@@ -81,13 +87,15 @@ async fn newsletter_delivery_is_idempotent() {
     let response = app.post_newsletter(&body).await;
     assert_is_redirect_to(&response, "/admin/newsletters");
     let html_page = app.get_newsletter_form_html().await;
-    assert!(html_page.contains("The newsletter issue has been published"));
+    assert!(html_page.contains("The newsletter issue has been accepted"));
 
     // Request #2 with same body (even idempotency key)
     let response = app.post_newsletter(&body).await;
     assert_is_redirect_to(&response, "/admin/newsletters");
     let html_page = app.get_newsletter_form_html().await;
-    assert!(html_page.contains("The newsletter issue has been published"));
+    assert!(html_page.contains("The newsletter issue has been accepted"));
+
+    app.dispatch_pending_emails().await;
 }
 
 #[test]
@@ -119,6 +127,8 @@ async fn concurrent_form_submission_is_handled_gracefully() {
         response1.text().await.unwrap(),
         response2.text().await.unwrap()
     );
+
+    app.dispatch_pending_emails().await;
 }
 
 fn dummy_newsletter_body() -> serde_json::Value {
@@ -131,7 +141,13 @@ fn dummy_newsletter_body() -> serde_json::Value {
 }
 
 async fn create_unconfirmed_subscriber(app: &TestApp) -> ConfirmationLinks {
-    let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
+    let name: String = Name().fake();
+    let email: String = SafeEmail().fake();
+    let body = serde_urlencoded::to_string(&serde_json::json!({
+            "name": name,
+            "email": email
+    }))
+    .unwrap();
 
     let _mock_guard = Mock::given(path("/email"))
         .and(method("POST"))
