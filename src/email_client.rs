@@ -114,7 +114,7 @@ mod tests {
             email(),
             Secret::new(Faker.fake()),
             Duration::from_millis(200),
-            "default".to_string()
+            "default".to_string(),
         )
     }
 
