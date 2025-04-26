@@ -10,6 +10,7 @@ pub struct EmailClient {
     base_url: String,
     sender: SubscriberEmail,
     authorization_token: Secret<String>,
+    stream: String,
 }
 
 impl EmailClient {
@@ -18,6 +19,7 @@ impl EmailClient {
         sender: SubscriberEmail,
         token: Secret<String>,
         timeout: Duration,
+        stream: String,
     ) -> Self {
         let http_client = Client::builder().timeout(timeout).build().unwrap();
         Self {
@@ -25,6 +27,7 @@ impl EmailClient {
             sender,
             http_client,
             authorization_token: token,
+            stream,
         }
     }
 
@@ -45,6 +48,7 @@ impl EmailClient {
             subject,
             html_body: html_content,
             text_body: text_content,
+            message_stream: &self.stream,
         };
 
         self.http_client
@@ -70,6 +74,7 @@ struct SendEmailRequest<'a> {
     subject: &'a str,
     html_body: &'a str,
     text_body: &'a str,
+    message_stream: &'a str,
 }
 
 #[cfg(test)]
@@ -109,6 +114,7 @@ mod tests {
             email(),
             Secret::new(Faker.fake()),
             Duration::from_millis(200),
+            "default".to_string()
         )
     }
 

@@ -12,4 +12,5 @@ email_client:
   sender_email: "test@gmail.com"
   token: "my_token"
   timeout_ms: 10000
+  stream: "broadcast"
 redis_uri: redis://127.0.0.1:6379
