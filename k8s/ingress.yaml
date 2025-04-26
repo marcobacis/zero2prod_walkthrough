@@ -2,16 +2,17 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: zero2prod-ingress
+  namespace: zero2prod
 spec:
-  ingressClassName: nginx
+  ingressClassName: cloudflare-tunnel
   rules:
-    - host: zerotoprod.labs.marcobacis.com
+    - host: zerotoprod.marcobacis.com
       http:
         paths:
           - pathType: Prefix
+            path: /
             backend:
               service:
                 name: zero2prod-api-svc
                 port:
                   number: 80
-            path: /

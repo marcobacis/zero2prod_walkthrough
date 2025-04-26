@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: zero2prod-db-svc
+  namespace: zero2prod
 spec:
   ports:
   - port: 5432
@@ -15,6 +16,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: zero2prod-db
+  namespace: zero2prod
 spec:
   selector:
     matchLabels:
