@@ -29,7 +29,8 @@ spec:
     spec:
       containers:
       - name: zero2prod
-        image: ghcr.io/marcobacis/zero2prod:sha-45929df
+        image: ghcr.io/marcobacis/zero2prod:develop
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
           name: 
